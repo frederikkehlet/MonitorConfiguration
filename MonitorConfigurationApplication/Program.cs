@@ -48,10 +48,12 @@ try
     // If we can hit this part of the program, the monitor supports DDC/CI and the monitor can be configured programmatically.
     Win32Api.GetMonitorBrightness(hPhysicalMonitor, out pdwMinimumBrightness, out pdwCurrentBrightness, out pdwMaximumBrightness);
 
+    #region main program logic
+    Console.WriteLine("This console application allows configuration of monitor settings. Type \"help\" for more information.");
     while (true)
     {
         string? input = Console.ReadLine();
-        
+
         if (input?.Split("=")[0].ToLower() == "brightness")
         {
             if (input?.Split("=")[1].ToLower() == null) return;
@@ -64,7 +66,8 @@ try
             if (brightnessValue < pdwMinimumBrightness)
                 throw new Exception($"Value {brightnessValue} is less than minimum brightness value {pdwMinimumBrightness}");
 
-            Win32Api.SetMonitorBrightness(hPhysicalMonitor, brightnessValue);
+            bool result = Win32Api.SetMonitorBrightness(hPhysicalMonitor, brightnessValue);
+            if (result) Console.WriteLine("Brightness changed successfully.");
         }
         else if (input?.Split("=")[0].ToLower() == "display")
         {
@@ -81,11 +84,17 @@ try
             newMode.dmPelsWidth = Convert.ToUInt32(input?.Split("=")[1].Split("x")[0]);
             newMode.dmPelsHeight = Convert.ToUInt32(input?.Split("=")[1].Split("x")[1]);
 
-            Win32Api.ChangeDisplaySettings(ref newMode, 0);
-
+            int result = Win32Api.ChangeDisplaySettings(ref newMode, 0);
+            if (result == DISP_CHANGE_SUCCESSFUL) Console.WriteLine("Display settings changed successfully.");
+        }
+        else if (input?.ToLower() == "clear") Console.Clear(); 
+        else if (input?.ToLower() == "help")
+        {
+            Console.WriteLine("Showing help here...");
         }
         else return;
-    }  
+    }
+    #endregion
 }
 catch (Win32Exception win32Ex)
 {
