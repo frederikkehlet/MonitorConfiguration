@@ -4,9 +4,16 @@ using System.Runtime.InteropServices;
 
 try
 {
+    #region variables and constants
     const uint MONITOR_DEFAULTTONULL = 0u;
     const uint MONITOR_DEFAULTTOPRIMARY = 1u;
     const uint MONITOR_DEFAULTTONEAREST = 2u;
+
+    const int DISP_CHANGE_SUCCESSFUL = 0;   // Indicates that the function succeeded.
+    const int DISP_CHANGE_BADMODE = -2;     // The graphics mode is not supported.
+    const int DISP_CHANGE_FAILED = -1;      // The display driver failed the specified graphics mode.
+    const int DISP_CHANGE_RESTART = 1;      // The computer must be restarted for the graphics mode to work.
+
     uint dwNumberOfPhysicalMonitors = 0u;
     uint pdwMonitorCapabilities = 0u;
     uint pdwSupportedColorTemperatures = 0u;
@@ -17,6 +24,7 @@ try
     uint pdwMinimumWidthOrHeight = 0u;
     uint pdwCurrentWidthOrHeight = 0u;
     uint pdwMaximumWidthOrHeight = 0u;
+    #endregion
 
     IntPtr handle = Win32Api.MonitorFromWindow(Win32Api.GetDesktopWindow(), MONITOR_DEFAULTTONULL);
 
@@ -44,8 +52,10 @@ try
     {
         string? input = Console.ReadLine();
         
-        if (input?.Split("=")[0].ToLower() == "brightness" && input?.Split("=")[1].ToLower() != null)
+        if (input?.Split("=")[0].ToLower() == "brightness")
         {
+            if (input?.Split("=")[1].ToLower() == null) return;
+
             uint brightnessValue = Convert.ToUInt32(input?.Split("=")[1].ToLower());
 
             if (brightnessValue > pdwMaximumBrightness)
@@ -55,6 +65,24 @@ try
                 throw new Exception($"Value {brightnessValue} is less than minimum brightness value {pdwMinimumBrightness}");
 
             Win32Api.SetMonitorBrightness(hPhysicalMonitor, brightnessValue);
+        }
+        else if (input?.Split("=")[0].ToLower() == "display")
+        {
+            if (input?.Split("=")[1].Split("x")[0] == null || input?.Split("=")[1].Split("x")[1] == null) return;
+
+            DEVMODE mode = new DEVMODE();
+            mode.dmSize = (ushort)Marshal.SizeOf(mode);
+
+            if (!Win32Api.EnumDisplaySettings(null, -1, ref mode))
+                throw new Win32Exception(Marshal.GetLastWin32Error());
+
+            DEVMODE newMode = mode; // copy the settings of current screen configuration
+
+            newMode.dmPelsWidth = Convert.ToUInt32(input?.Split("=")[1].Split("x")[0]);
+            newMode.dmPelsHeight = Convert.ToUInt32(input?.Split("=")[1].Split("x")[1]);
+
+            Win32Api.ChangeDisplaySettings(ref newMode, 0);
+
         }
         else return;
     }  

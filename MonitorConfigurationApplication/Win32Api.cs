@@ -34,8 +34,10 @@ namespace MonitorConfigurationApplication
         [DllImport("Dxva2.dll")]
         public static extern bool SetMonitorBrightness(IntPtr hMonitor, uint dwNewBrightness);
 
-        [DllImport("Dxva2.dll")]
-        public static extern bool GetMonitorDisplayAreaSize(IntPtr hMonitor, MC_SIZE_TYPE stSizeType,
-            out uint pdwMinimumWidthOrHeight, out uint pdwCurrentWidthOrHeight, out uint pdwMaximumWidthOrHeight);
+        [DllImport("user32.dll")]
+        public static extern bool EnumDisplaySettings(string? lpszDeviceName, int iModeNum, ref DEVMODE lpDevMode);
+
+        [DllImport("user32.dll")]
+        public static extern int ChangeDisplaySettings(ref DEVMODE lpDevMode, uint dwFlags);
     }
 }
